@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  whatsapp-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: whatsapp-mcp-server:latest
+    container_name: whatsapp-mcp-server
+    env_file:
+      - .env
+    ports:
+      - "${WEBHOOK_PORT:-3000}:${WEBHOOK_PORT:-3000}"
+    restart: unless-stopped
+    stdin_open: true
+    tty: false
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://localhost:' + (process.env.WEBHOOK_PORT||3000) + (process.env.WEBHOOK_PATH||'/webhook'), r => process.exit(r.statusCode===403?0:1)).on('error',()=>process.exit(0))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
