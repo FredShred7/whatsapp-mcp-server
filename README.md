@@ -2,11 +2,36 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)](https://www.typescriptlang.org)
-[![MCP Compatible](https://img.shields.io/badge/MCP-compatible-purple)](https://modelcontextprotocol.io)
-[![WhatsApp Cloud API](https://img.shields.io/badge/WhatsApp-Cloud%20API%20v21.0-25D366?logo=whatsapp)](https://developers.facebook.com/docs/whatsapp/cloud-api)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![MCP Compatible](https://img.shields.io/badge/MCP-compatible-6B46C1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMSAxNEg5VjhIMTF2OHptNCAwaC0yVjhoMnY4eiIvPjwvc3ZnPg==)](https://modelcontextprotocol.io)
+[![Official Meta API](https://img.shields.io/badge/Meta-Official%20Cloud%20API-0866FF?logo=meta&logoColor=white)](https://developers.facebook.com/docs/whatsapp/cloud-api)
+[![WhatsApp Business](https://img.shields.io/badge/WhatsApp-Business%20API%20v21.0-25D366?logo=whatsapp&logoColor=white)](https://developers.facebook.com/docs/whatsapp/cloud-api)
+[![No Ban Risk](https://img.shields.io/badge/Ban%20Risk-None%20(Official%20API)-25D366)](https://developers.facebook.com/docs/whatsapp/cloud-api)
 
 A production-ready **Model Context Protocol (MCP) server** that connects AI assistants like Claude to the **WhatsApp Cloud API** (Meta). Send messages, manage conversations, handle media, send template messages, and receive real-time webhooks — all through natural language.
+
+---
+
+## Why this MCP server?
+
+> **This is the only WhatsApp MCP server built on the official Meta WhatsApp Cloud API.**
+
+Most WhatsApp tools for developers rely on unofficial browser automation libraries (`whatsapp-web.js`) or reverse-engineered protocols (`whatsmeow`, `Baileys`). These approaches violate WhatsApp's Terms of Service and carry a real risk of account bans. This project is different.
+
+| | **whatsapp-mcp-server** (this project) | Unofficial libraries (`whatsapp-web.js`, `whatsmeow`, `Baileys`) |
+|---|---|---|
+| **API type** | ✅ Official Meta WhatsApp Cloud API | ❌ Unofficial / reverse-engineered |
+| **Account ban risk** | ✅ None — Meta-approved | ⚠️ High — violates WhatsApp ToS |
+| **Account type** | ✅ WhatsApp Business account | Personal account only |
+| **Uptime reliability** | ✅ Meta SLA-backed infrastructure | ❌ Breaks when WhatsApp updates |
+| **Scalability** | ✅ Business-grade, multi-agent ready | ❌ Limited to one session |
+| **Template messages** | ✅ Full support | ❌ Not available |
+| **Media handling** | ✅ Native Cloud API media endpoints | ⚠️ Workarounds required |
+| **Webhook support** | ✅ Official Meta webhook events | ❌ Polling / fragile listeners |
+| **Production use** | ✅ Built for production | ❌ Recommended for personal/hobby use only |
+| **Long-term viability** | ✅ Stable, versioned API | ❌ Depends on reverse engineering staying current |
+
+**Bottom line:** if you are building anything beyond a personal experiment — customer support, automated notifications, business workflows — use the official API. This server gives you that, packaged as a drop-in MCP server.
 
 ---
 
