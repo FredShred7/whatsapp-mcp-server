@@ -1,8 +1,35 @@
 {
   "name": "whatsapp-mcp-server",
-  "version": "1.0.0",
-  "description": "MCP server for WhatsApp Cloud API",
+  "version": "1.1.0",
+  "description": "MCP server for the official Meta WhatsApp Cloud API",
   "type": "module",
+  "license": "MIT",
+  "author": "FredShred7",
+  "homepage": "https://github.com/FredShred7/whatsapp-mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FredShred7/whatsapp-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FredShred7/whatsapp-mcp-server/issues"
+  },
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "model-context-protocol",
+    "whatsapp",
+    "whatsapp-cloud-api",
+    "whatsapp-business",
+    "meta",
+    "claude",
+    "ai"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist"
+  ],
   "bin": {
     "whatsapp-mcp-server": "./dist/index.js"
   },
@@ -11,7 +38,8 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
@@ -22,8 +50,8 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@eslint/js": "^9.0.0",
+    "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
