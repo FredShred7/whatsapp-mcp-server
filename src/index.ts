@@ -28,6 +28,7 @@ const config: WhatsAppConfig = {
   businessAccountId: process.env["WHATSAPP_BUSINESS_ACCOUNT_ID"],
   apiVersion: process.env["WHATSAPP_API_VERSION"] ?? "v21.0",
   baseUrl: "https://graph.facebook.com",
+  appSecret: process.env["WHATSAPP_APP_SECRET"],
 };
 
 // ─── Initialise WhatsApp client ───────────────────────────────────────────────
@@ -56,6 +57,7 @@ if (webhookPortStr) {
 
   webhook = new WhatsAppWebhook({
     verifyToken: config.webhookVerifyToken,
+    appSecret: config.appSecret,
     port,
     path: process.env["WEBHOOK_PATH"] ?? "/webhook",
   });

@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { createHmac, timingSafeEqual } from "crypto";
 import express, { Request, Response, Application } from "express";
 import type {
   WebhookPayload,
@@ -14,6 +15,13 @@ export interface WebhookConfig {
   port: number;
   path: string;
   maxMessagesPerConversation?: number;
+  /** Meta App Secret. When set, the X-Hub-Signature-256 header is verified. */
+  appSecret?: string;
+}
+
+/** Express Request augmented with the raw request body captured for HMAC verification. */
+interface RawBodyRequest extends Request {
+  rawBody?: Buffer;
 }
 
 export class WhatsAppWebhook extends EventEmitter {
@@ -28,8 +36,65 @@ export class WhatsAppWebhook extends EventEmitter {
     this.config = config;
     this.maxMessages = config.maxMessagesPerConversation ?? 100;
     this.app = express();
-    this.app.use(express.json());
+    // Capture the raw body so we can verify the X-Hub-Signature-256 HMAC.
+    this.app.use(
+      express.json({
+        verify: (req, _res, buf) => {
+          (req as RawBodyRequest).rawBody = buf;
+        },
+      }),
+    );
     this.registerRoutes();
+
+    if (!config.appSecret) {
+      console.error(
+        "[webhook] WARNING: WHATSAPP_APP_SECRET is not set — incoming webhook " +
+          "signatures will NOT be verified. This is fine for local development, " +
+          "but you should set WHATSAPP_APP_SECRET in production.",
+      );
+    }
+  }
+
+  // ─── Signature Verification ───────────────────────────────────────────────
+
+  /**
+   * Verify the X-Hub-Signature-256 header against the raw request body using
+   * HMAC-SHA256 keyed with the Meta App Secret. Returns true when verification
+   * passes, or when no app secret is configured (dev mode).
+   */
+  private verifySignature(req: Request): boolean {
+    if (!this.config.appSecret) {
+      // No secret configured — skip verification (warned at startup).
+      return true;
+    }
+
+    const header = req.get("x-hub-signature-256");
+    if (!header) {
+      console.error("[webhook] Rejected request: missing X-Hub-Signature-256 header");
+      return false;
+    }
+
+    const rawBody = (req as RawBodyRequest).rawBody;
+    if (!rawBody) {
+      console.error("[webhook] Rejected request: raw body unavailable for verification");
+      return false;
+    }
+
+    const expected =
+      "sha256=" + createHmac("sha256", this.config.appSecret).update(rawBody).digest("hex");
+
+    const headerBuf = Buffer.from(header);
+    const expectedBuf = Buffer.from(expected);
+    if (headerBuf.length !== expectedBuf.length) {
+      console.error("[webhook] Rejected request: signature mismatch");
+      return false;
+    }
+
+    const ok = timingSafeEqual(headerBuf, expectedBuf);
+    if (!ok) {
+      console.error("[webhook] Rejected request: signature mismatch");
+    }
+    return ok;
   }
 
   // ─── Route Registration ───────────────────────────────────────────────────
@@ -58,7 +123,13 @@ export class WhatsAppWebhook extends EventEmitter {
   // ─── POST /webhook — incoming events ─────────────────────────────────────
 
   private handleIncoming(req: Request, res: Response): void {
-    // Always respond 200 immediately so Meta doesn't retry
+    // Verify the payload signature before doing anything else.
+    if (!this.verifySignature(req)) {
+      res.sendStatus(403);
+      return;
+    }
+
+    // Respond 200 immediately so Meta doesn't retry
     res.sendStatus(200);
 
     const payload = req.body as WebhookPayload;

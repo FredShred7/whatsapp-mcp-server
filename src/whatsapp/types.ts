@@ -7,6 +7,8 @@ export interface WhatsAppConfig {
   businessAccountId?: string;
   apiVersion: string;
   baseUrl: string;
+  /** Meta App Secret, used to verify the X-Hub-Signature-256 header on webhooks. */
+  appSecret?: string;
 }
 
 // ─── Message Status ───────────────────────────────────────────────────────────
