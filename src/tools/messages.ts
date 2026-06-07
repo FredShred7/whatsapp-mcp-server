@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { WhatsAppClient } from "../whatsapp/client.js";
 import type { WhatsAppWebhook } from "../whatsapp/webhook.js";
-import { WhatsAppError } from "../whatsapp/types.js";
+import { formatError, toInputSchema } from "./shared.js";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -93,7 +93,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_send_text",
     description:
       "Send a text message to a WhatsApp phone number. Supports up to 4096 characters and optional URL preview.",
-    inputSchema: zodToJsonSchema(SendTextSchema),
+    inputSchema: toInputSchema(SendTextSchema),
     handler: async (args, client, webhook) => {
       const params = SendTextSchema.parse(args);
       try {
@@ -116,7 +116,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_send_image",
     description:
       "Send an image message to a WhatsApp phone number. Provide a publicly accessible image URL.",
-    inputSchema: zodToJsonSchema(SendImageSchema),
+    inputSchema: toInputSchema(SendImageSchema),
     handler: async (args, client, webhook) => {
       const params = SendImageSchema.parse(args);
       try {
@@ -144,7 +144,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_send_video",
     description:
       "Send a video message to a WhatsApp phone number. Provide a publicly accessible video URL.",
-    inputSchema: zodToJsonSchema(SendVideoSchema),
+    inputSchema: toInputSchema(SendVideoSchema),
     handler: async (args, client, webhook) => {
       const params = SendVideoSchema.parse(args);
       try {
@@ -171,7 +171,7 @@ export const messageTools: ToolDefinition[] = [
   {
     name: "whatsapp_send_audio",
     description: "Send an audio message to a WhatsApp phone number. Provide a publicly accessible audio URL.",
-    inputSchema: zodToJsonSchema(SendAudioSchema),
+    inputSchema: toInputSchema(SendAudioSchema),
     handler: async (args, client, webhook) => {
       const params = SendAudioSchema.parse(args);
       try {
@@ -193,7 +193,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_send_document",
     description:
       "Send a document or file to a WhatsApp phone number. Supports PDF, Word, Excel, and other common formats.",
-    inputSchema: zodToJsonSchema(SendDocumentSchema),
+    inputSchema: toInputSchema(SendDocumentSchema),
     handler: async (args, client, webhook) => {
       const params = SendDocumentSchema.parse(args);
       try {
@@ -221,7 +221,7 @@ export const messageTools: ToolDefinition[] = [
   {
     name: "whatsapp_send_reaction",
     description: "React to a WhatsApp message with an emoji.",
-    inputSchema: zodToJsonSchema(SendReactionSchema),
+    inputSchema: toInputSchema(SendReactionSchema),
     handler: async (args, client) => {
       const params = SendReactionSchema.parse(args);
       try {
@@ -237,7 +237,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_mark_read",
     description:
       "Mark an incoming WhatsApp message as read. This sends a read receipt to the sender.",
-    inputSchema: zodToJsonSchema(MarkReadSchema),
+    inputSchema: toInputSchema(MarkReadSchema),
     handler: async (args, client) => {
       const params = MarkReadSchema.parse(args);
       try {
@@ -253,7 +253,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_list_conversations",
     description:
       "List recent WhatsApp conversations. Only available when the webhook server is running and has received messages.",
-    inputSchema: zodToJsonSchema(ListConversationsSchema),
+    inputSchema: toInputSchema(ListConversationsSchema),
     handler: async (args, _client, webhook) => {
       const params = ListConversationsSchema.parse(args);
       if (!webhook) {
@@ -279,7 +279,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_get_conversation",
     description:
       "Get the message history for a conversation with a specific phone number. Requires webhook server.",
-    inputSchema: zodToJsonSchema(GetConversationSchema),
+    inputSchema: toInputSchema(GetConversationSchema),
     handler: async (args, _client, webhook) => {
       const params = GetConversationSchema.parse(args);
       if (!webhook) {
@@ -306,7 +306,7 @@ export const messageTools: ToolDefinition[] = [
     name: "whatsapp_get_message_status",
     description:
       "Get the delivery/read status of a previously sent message. Requires webhook server for live updates.",
-    inputSchema: zodToJsonSchema(GetMessageStatusSchema),
+    inputSchema: toInputSchema(GetMessageStatusSchema),
     handler: async (args, _client, webhook) => {
       const params = GetMessageStatusSchema.parse(args);
       if (!webhook) {
@@ -320,69 +320,3 @@ export const messageTools: ToolDefinition[] = [
     },
   },
 ];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatError(err: unknown): string {
-  if (err instanceof WhatsAppError) {
-    return `WhatsApp API error (code ${err.code}): ${err.message}${err.fbtrace_id ? ` [trace: ${err.fbtrace_id}]` : ""}`;
-  }
-  if (err instanceof z.ZodError) {
-    const issues = err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    return `Invalid input: ${issues}`;
-  }
-  return `Unexpected error: ${(err as Error).message ?? String(err)}`;
-}
-
-function zodToJsonSchema(schema: z.ZodObject<z.ZodRawShape>): object {
-  const shape = schema.shape;
-  const properties: Record<string, unknown> = {};
-  const required: string[] = [];
-
-  for (const [key, value] of Object.entries(shape)) {
-    properties[key] = zodFieldToJsonSchema(value as z.ZodTypeAny);
-    if (!(value instanceof z.ZodOptional) && !(value instanceof z.ZodDefault)) {
-      required.push(key);
-    }
-  }
-
-  return {
-    type: "object",
-    properties,
-    required: required.length > 0 ? required : undefined,
-  };
-}
-
-function zodFieldToJsonSchema(field: z.ZodTypeAny): object {
-  if (field instanceof z.ZodOptional) {
-    return zodFieldToJsonSchema(field.unwrap());
-  }
-  if (field instanceof z.ZodDefault) {
-    return zodFieldToJsonSchema(field.removeDefault());
-  }
-  if (field instanceof z.ZodString) {
-    const schema: Record<string, unknown> = { type: "string" };
-    const description = field.description;
-    if (description) schema.description = description;
-    return schema;
-  }
-  if (field instanceof z.ZodNumber) {
-    const schema: Record<string, unknown> = { type: "number" };
-    const description = field.description;
-    if (description) schema.description = description;
-    return schema;
-  }
-  if (field instanceof z.ZodBoolean) {
-    const schema: Record<string, unknown> = { type: "boolean" };
-    const description = field.description;
-    if (description) schema.description = description;
-    return schema;
-  }
-  if (field instanceof z.ZodArray) {
-    return { type: "array", items: zodFieldToJsonSchema(field.element) };
-  }
-  if (field instanceof z.ZodObject) {
-    return zodToJsonSchema(field as z.ZodObject<z.ZodRawShape>);
-  }
-  return { type: "string" };
-}

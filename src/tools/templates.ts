@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { WhatsAppClient } from "../whatsapp/client.js";
 import type { WhatsAppWebhook } from "../whatsapp/webhook.js";
-import { WhatsAppError } from "../whatsapp/types.js";
 import type { TemplateComponent } from "../whatsapp/types.js";
 import type { ToolDefinition } from "./messages.js";
+import { formatError, toInputSchema } from "./shared.js";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -106,67 +106,7 @@ export const templateTools: ToolDefinition[] = [
     name: "whatsapp_send_template",
     description:
       "Send an approved WhatsApp message template. Templates are pre-approved messages used for business-initiated conversations. Supports header, body, and button components with dynamic variable substitution.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        to: {
-          type: "string",
-          description: "Recipient phone number in E.164 format, e.g. +15551234567",
-        },
-        template_name: {
-          type: "string",
-          description: "Name of the approved template to send",
-        },
-        language_code: {
-          type: "string",
-          description: "Language code for the template, e.g. en_US, pt_BR, es, fr",
-        },
-        components: {
-          type: "array",
-          description:
-            "Template components with dynamic values. Include header, body, and/or button components as needed.",
-          items: {
-            type: "object",
-            properties: {
-              type: {
-                type: "string",
-                enum: ["header", "body", "button"],
-              },
-              sub_type: {
-                type: "string",
-                enum: ["quick_reply", "url", "call_to_action"],
-                description: "Required for button components",
-              },
-              index: {
-                type: "number",
-                description: "Button index (0-based), required for button components",
-              },
-              parameters: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: {
-                      type: "string",
-                      enum: ["text", "currency", "date_time", "image", "document", "video"],
-                    },
-                    text: { type: "string" },
-                    payload: { type: "string" },
-                  },
-                  required: ["type"],
-                },
-              },
-            },
-            required: ["type"],
-          },
-        },
-        reply_to_message_id: {
-          type: "string",
-          description: "Message ID to reply to",
-        },
-      },
-      required: ["to", "template_name", "language_code"],
-    },
+    inputSchema: toInputSchema(SendTemplateSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, webhook?: WhatsAppWebhook) => {
       const params = SendTemplateSchema.parse(args);
       try {
@@ -200,15 +140,7 @@ export const templateTools: ToolDefinition[] = [
     name: "whatsapp_list_templates",
     description:
       "List available WhatsApp message templates for your business account. Shows template name, status (APPROVED/PENDING/REJECTED), category, and language. Requires WHATSAPP_BUSINESS_ACCOUNT_ID to be configured.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "number",
-          description: "Maximum number of templates to return (default 20, max 100)",
-        },
-      },
-    },
+    inputSchema: toInputSchema(ListTemplatesSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = ListTemplatesSchema.parse(args);
       try {
@@ -238,16 +170,3 @@ export const templateTools: ToolDefinition[] = [
     },
   },
 ];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatError(err: unknown): string {
-  if (err instanceof WhatsAppError) {
-    return `WhatsApp API error (code ${err.code}): ${err.message}${err.fbtrace_id ? ` [trace: ${err.fbtrace_id}]` : ""}`;
-  }
-  if (err instanceof z.ZodError) {
-    const issues = err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    return `Invalid input: ${issues}`;
-  }
-  return `Unexpected error: ${(err as Error).message ?? String(err)}`;
-}

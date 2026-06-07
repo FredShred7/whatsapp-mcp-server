@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { WhatsAppClient } from "../whatsapp/client.js";
 import type { WhatsAppWebhook } from "../whatsapp/webhook.js";
-import { WhatsAppError } from "../whatsapp/types.js";
 import type { ToolDefinition } from "./messages.js";
+import { formatError, toInputSchema } from "./shared.js";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -64,17 +64,7 @@ export const contactTools: ToolDefinition[] = [
     name: "whatsapp_get_contact",
     description:
       "Look up a phone number to check if it has a WhatsApp account and retrieve the WhatsApp ID. Useful before sending messages to validate numbers.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        phone_number: {
-          type: "string",
-          description:
-            "Phone number to look up in E.164 format (e.g. +15551234567). Returns WhatsApp ID and validity status.",
-        },
-      },
-      required: ["phone_number"],
-    },
+    inputSchema: toInputSchema(GetContactSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = GetContactSchema.parse(args);
       try {
@@ -94,10 +84,7 @@ export const contactTools: ToolDefinition[] = [
     name: "whatsapp_get_business_profile",
     description:
       "Retrieve the WhatsApp Business profile for your connected phone number, including about text, address, description, email, and website.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
+    inputSchema: toInputSchema(GetBusinessProfileSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       GetBusinessProfileSchema.parse(args);
       try {
@@ -123,41 +110,7 @@ export const contactTools: ToolDefinition[] = [
     name: "whatsapp_update_business_profile",
     description:
       "Update your WhatsApp Business profile. You can update the about text, address, description, email, website URLs, and business vertical.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        about: {
-          type: "string",
-          description: "Business about text (max 139 characters)",
-        },
-        address: {
-          type: "string",
-          description: "Business address",
-        },
-        description: {
-          type: "string",
-          description: "Business description (max 512 characters)",
-        },
-        email: {
-          type: "string",
-          description: "Business email address",
-        },
-        websites: {
-          type: "array",
-          items: { type: "string" },
-          description: "Up to 2 website URLs for the business",
-        },
-        vertical: {
-          type: "string",
-          enum: [
-            "UNDEFINED", "OTHER", "AUTO", "BEAUTY", "APPAREL", "EDU", "ENTERTAIN",
-            "EVENT_PLAN", "FINANCE", "GROCERY", "GOVT", "HOTEL", "HEALTH",
-            "NONPROFIT", "PROF_SERVICES", "RETAIL", "TRAVEL", "RESTAURANT", "NOT_A_BIZ",
-          ],
-          description: "Business vertical / industry category",
-        },
-      },
-    },
+    inputSchema: toInputSchema(UpdateBusinessProfileSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = UpdateBusinessProfileSchema.parse(args);
       const updates = Object.fromEntries(
@@ -178,16 +131,3 @@ export const contactTools: ToolDefinition[] = [
     },
   },
 ];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatError(err: unknown): string {
-  if (err instanceof WhatsAppError) {
-    return `WhatsApp API error (code ${err.code}): ${err.message}${err.fbtrace_id ? ` [trace: ${err.fbtrace_id}]` : ""}`;
-  }
-  if (err instanceof z.ZodError) {
-    const issues = err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    return `Invalid input: ${issues}`;
-  }
-  return `Unexpected error: ${(err as Error).message ?? String(err)}`;
-}

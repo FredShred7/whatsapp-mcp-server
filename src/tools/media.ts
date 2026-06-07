@@ -5,8 +5,8 @@ import { join } from "path";
 import { tmpdir } from "os";
 import type { WhatsAppClient } from "../whatsapp/client.js";
 import type { WhatsAppWebhook } from "../whatsapp/webhook.js";
-import { WhatsAppError } from "../whatsapp/types.js";
 import type { ToolDefinition } from "./messages.js";
+import { formatError, toInputSchema } from "./shared.js";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -73,25 +73,7 @@ export const mediaTools: ToolDefinition[] = [
     name: "whatsapp_upload_media",
     description:
       "Upload a media file from a URL to WhatsApp and get back a media ID. The media ID can then be used to send media messages. Supports images (JPEG, PNG, WebP), videos (MP4, 3GPP), audio (AAC, MP4, MPEG, AMR, OGG), and documents (PDF, Word, Excel, PowerPoint, plain text).",
-    inputSchema: {
-      type: "object",
-      properties: {
-        media_url: {
-          type: "string",
-          description: "Publicly accessible URL of the media file to upload to WhatsApp",
-        },
-        mime_type: {
-          type: "string",
-          description:
-            "MIME type of the media file, e.g. image/jpeg, video/mp4, audio/ogg, application/pdf",
-        },
-        filename: {
-          type: "string",
-          description: "Optional filename for the uploaded file (used for documents)",
-        },
-      },
-      required: ["media_url", "mime_type"],
-    },
+    inputSchema: toInputSchema(UploadMediaSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = UploadMediaSchema.parse(args);
 
@@ -146,17 +128,7 @@ export const mediaTools: ToolDefinition[] = [
     name: "whatsapp_get_media_url",
     description:
       "Get the download URL for a WhatsApp media file using its media ID. The URL is temporary and expires after 5 minutes. Use this to download received media.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        media_id: {
-          type: "string",
-          description:
-            "WhatsApp media ID returned when a media message is received or uploaded",
-        },
-      },
-      required: ["media_id"],
-    },
+    inputSchema: toInputSchema(GetMediaUrlSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = GetMediaUrlSchema.parse(args);
       try {
@@ -179,16 +151,7 @@ export const mediaTools: ToolDefinition[] = [
     name: "whatsapp_delete_media",
     description:
       "Delete a previously uploaded media file from WhatsApp servers using its media ID. This frees up storage and removes the file permanently.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        media_id: {
-          type: "string",
-          description: "WhatsApp media ID of the media to delete",
-        },
-      },
-      required: ["media_id"],
-    },
+    inputSchema: toInputSchema(DeleteMediaSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = DeleteMediaSchema.parse(args);
       try {
@@ -205,20 +168,6 @@ export const mediaTools: ToolDefinition[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatError(err: unknown): string {
-  if (err instanceof WhatsAppError) {
-    return `WhatsApp API error (code ${err.code}): ${err.message}${err.fbtrace_id ? ` [trace: ${err.fbtrace_id}]` : ""}`;
-  }
-  if (err instanceof z.ZodError) {
-    const issues = err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    return `Invalid input: ${issues}`;
-  }
-  if (err instanceof Error) {
-    return `Error: ${err.message}`;
-  }
-  return `Unexpected error: ${String(err)}`;
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
