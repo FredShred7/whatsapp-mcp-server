@@ -63,7 +63,11 @@ export const contactTools: ToolDefinition[] = [
   {
     name: "whatsapp_get_contact",
     description:
-      "Look up a phone number to check if it has a WhatsApp account and retrieve the WhatsApp ID. Useful before sending messages to validate numbers.",
+      "[LEGACY / UNSUPPORTED] Look up a phone number to check if it has a WhatsApp account and retrieve the WhatsApp ID. " +
+      "This relies on the POST /{phone-number-id}/contacts 'contact check' endpoint, which was an On-Premises API feature " +
+      "(sunset 2025-10-23) and has NO equivalent in the WhatsApp Cloud API — it is not expected to work and is retained " +
+      "only for backwards compatibility. To check deliverability, send the message and inspect message-status webhooks / " +
+      "error codes instead.",
     inputSchema: toInputSchema(GetContactSchema),
     handler: async (args: Record<string, unknown>, client: WhatsAppClient, _webhook?: WhatsAppWebhook) => {
       const params = GetContactSchema.parse(args);

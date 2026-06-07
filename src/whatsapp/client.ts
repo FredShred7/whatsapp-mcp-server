@@ -332,6 +332,14 @@ export class WhatsAppClient {
 
   // ─── Contact Info ─────────────────────────────────────────────────────────
 
+  /**
+   * LEGACY / UNSUPPORTED. The POST /{phone-number-id}/contacts "contact check"
+   * endpoint was an On-Premises API feature (sunset 2025-10-23) with no Cloud
+   * API equivalent. Even before sunset Meta degraded it to always return
+   * "valid", so the result cannot be trusted. Retained for backwards
+   * compatibility only — prefer sending the message and inspecting
+   * message-status webhooks / error codes to determine deliverability.
+   */
   async getContactInfo(phoneNumber: string): Promise<{
     input: string;
     wa_id: string;

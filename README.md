@@ -173,7 +173,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 | `whatsapp_list_conversations` | List recent conversations (webhook required) | `limit?` |
 | `whatsapp_get_conversation` | Get messages with a contact (webhook required) | `phone_number`, `limit?` |
 | `whatsapp_get_message_status` | Get delivery/read status (webhook required) | `message_id` |
-| `whatsapp_get_contact` | Validate a phone number on WhatsApp | `phone_number` |
+| `whatsapp_get_contact` | ⚠️ **Legacy/unsupported** — validate a phone number on WhatsApp (see note below) | `phone_number` |
 | `whatsapp_get_business_profile` | Get your WhatsApp Business profile | — |
 | `whatsapp_update_business_profile` | Update business profile info | `about?`, `address?`, `description?`, `email?`, `websites?`, `vertical?` |
 | `whatsapp_upload_media` | Upload media from URL, get media ID | `media_url`, `mime_type`, `filename?` |
@@ -181,6 +181,15 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 | `whatsapp_delete_media` | Delete uploaded media | `media_id` |
 | `whatsapp_send_template` | Send an approved template message | `to`, `template_name`, `language_code`, `components?` |
 | `whatsapp_list_templates` | List available message templates | `limit?` |
+
+> ⚠️ **`whatsapp_get_contact` is legacy and not expected to work on the Cloud API.**
+> It relies on the `POST /{phone-number-id}/contacts` "contact check" endpoint,
+> which was an **On-Premises API** feature only. Meta degraded its accuracy (it
+> began always returning `valid`) and then **sunset the entire On-Premises API on
+> 2025-10-23**. The WhatsApp Cloud API has **no contact-validation endpoint**. To
+> determine whether a number can receive messages, **send the message and inspect
+> the message-status webhooks / error codes** (e.g. `131026` "message
+> undeliverable") instead. The tool is retained only for backwards compatibility.
 
 ---
 
