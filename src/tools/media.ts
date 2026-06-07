@@ -1,6 +1,6 @@
 import { z } from "zod";
 import axios from "axios";
-import { writeFileSync, unlinkSync, mkdtempSync } from "fs";
+import { writeFileSync, rmSync, mkdtempSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import type { WhatsAppClient } from "../whatsapp/client.js";
@@ -129,17 +129,11 @@ export const mediaTools: ToolDefinition[] = [
       } catch (err) {
         return formatError(err);
       } finally {
-        // Clean up temp file
-        if (tempFilePath) {
-          try {
-            unlinkSync(tempFilePath);
-          } catch {
-            // ignore cleanup errors
-          }
-        }
+        // Remove the whole temp directory (and the file inside it) recursively.
+        // Using unlinkSync on a directory fails silently and leaks temp dirs.
         if (tempDir) {
           try {
-            unlinkSync(tempDir);
+            rmSync(tempDir, { recursive: true, force: true });
           } catch {
             // ignore cleanup errors
           }
