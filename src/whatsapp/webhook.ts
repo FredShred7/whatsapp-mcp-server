@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { createHmac, timingSafeEqual } from "crypto";
+import type { Server } from "http";
 import express, { Request, Response, Application } from "express";
 import type {
   WebhookPayload,
@@ -30,6 +31,7 @@ export class WhatsAppWebhook extends EventEmitter {
   private readonly conversations: Map<string, Conversation> = new Map();
   private readonly messageStatuses: Map<string, MessageStatus> = new Map();
   private readonly maxMessages: number;
+  private server?: Server;
 
   constructor(config: WebhookConfig) {
     super();
@@ -292,10 +294,29 @@ export class WhatsAppWebhook extends EventEmitter {
 
   start(): Promise<void> {
     return new Promise((resolve) => {
-      this.app.listen(this.config.port, () => {
+      this.server = this.app.listen(this.config.port, () => {
         console.error(
           `[webhook] Listening on port ${this.config.port} at path ${this.config.path}`,
         );
+        resolve();
+      });
+    });
+  }
+
+  /** Stop the webhook HTTP server, closing it gracefully. */
+  stop(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.server) {
+        resolve();
+        return;
+      }
+      this.server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        console.error("[webhook] Server stopped");
+        this.server = undefined;
         resolve();
       });
     });

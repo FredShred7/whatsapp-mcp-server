@@ -73,6 +73,25 @@ if (webhookPortStr) {
   await webhook.start();
 }
 
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
+
+let shuttingDown = false;
+
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.error(`[shutdown] Received ${signal}, shutting down gracefully...`);
+  try {
+    if (webhook) await webhook.stop();
+  } catch (err) {
+    console.error(`[shutdown] Error while stopping webhook server: ${(err as Error).message}`);
+  }
+  process.exit(0);
+}
+
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+
 // ─── Start MCP server ─────────────────────────────────────────────────────────
 
 await startMcpServer(whatsappClient, webhook);
