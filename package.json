@@ -1,9 +1,13 @@
 {
-  "name": "whatsapp-mcp-server",
+  "name": "@fredshred7/whatsapp-mcp-server",
   "version": "1.1.0",
   "description": "MCP server for the official Meta WhatsApp Cloud API",
+  "mcpName": "io.github.FredShred7/whatsapp-mcp-server",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "FredShred7",
   "homepage": "https://github.com/FredShred7/whatsapp-mcp-server#readme",
   "repository": {

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.FredShred7/whatsapp-mcp-server",
+  "description": "MCP server for the official Meta WhatsApp Cloud API",
+  "repository": {
+    "url": "https://github.com/FredShred7/whatsapp-mcp-server",
+    "source": "github"
+  },
+  "version": "1.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@fredshred7/whatsapp-mcp-server",
+      "version": "1.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "WHATSAPP_PHONE_NUMBER_ID",
+          "description": "WhatsApp phone number ID from the Meta App Dashboard (WhatsApp > API Setup)",
+          "isRequired": true,
+          "isSecret": false
+        },
+        {
+          "name": "WHATSAPP_ACCESS_TOKEN",
+          "description": "Permanent access token for your WhatsApp app",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+          "description": "Random secret string used to verify the webhook with Meta. Required only when running the webhook server.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "WHATSAPP_APP_SECRET",
+          "description": "Meta App Secret used to verify the X-Hub-Signature-256 signature on incoming webhooks. Recommended in production.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+          "description": "WhatsApp Business Account ID. Required only for listing phone numbers and templates.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "WHATSAPP_API_VERSION",
+          "description": "WhatsApp Cloud API version (default: v21.0)",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "WEBHOOK_PORT",
+          "description": "Port for the incoming webhook server. Set to enable receiving messages (e.g. 3000).",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "WEBHOOK_PATH",
+          "description": "HTTP path for the webhook endpoint (default: /webhook)",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

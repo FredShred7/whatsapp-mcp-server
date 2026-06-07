@@ -107,7 +107,7 @@ to let your MCP client launch it via `npx` and pass credentials through `env`
 (see the [client config blocks below](#usage-with-claude-desktop)):
 
 ```bash
-npx -y whatsapp-mcp-server
+npx -y @fredshred7/whatsapp-mcp-server
 ```
 
 `npx` downloads and runs the published package on demand — point your MCP client
@@ -207,7 +207,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
   "mcpServers": {
     "whatsapp": {
       "command": "npx",
-      "args": ["-y", "whatsapp-mcp-server"],
+      "args": ["-y", "@fredshred7/whatsapp-mcp-server"],
       "env": {
         "WHATSAPP_PHONE_NUMBER_ID": "your_phone_number_id",
         "WHATSAPP_ACCESS_TOKEN": "your_access_token",
@@ -255,7 +255,7 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level
   "mcpServers": {
     "whatsapp": {
       "command": "npx",
-      "args": ["-y", "whatsapp-mcp-server"],
+      "args": ["-y", "@fredshred7/whatsapp-mcp-server"],
       "env": {
         "WHATSAPP_PHONE_NUMBER_ID": "your_phone_number_id",
         "WHATSAPP_ACCESS_TOKEN": "your_access_token",
@@ -271,7 +271,7 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level
 
 Or use the CLI to add it:
 ```bash
-claude mcp add whatsapp npx -y whatsapp-mcp-server
+claude mcp add whatsapp npx -y @fredshred7/whatsapp-mcp-server
 ```
 
 ---
