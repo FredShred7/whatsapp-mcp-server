@@ -183,10 +183,13 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 | `whatsapp_list_templates` | List available message templates | `limit?` |
 
 > ⚠️ **`whatsapp_get_contact` is legacy and not expected to work on the Cloud API.**
-> It relies on the `POST /{phone-number-id}/contacts` "contact check" endpoint,
-> which was an **On-Premises API** feature only. Meta degraded its accuracy (it
-> began always returning `valid`) and then **sunset the entire On-Premises API on
-> 2025-10-23**. The WhatsApp Cloud API has **no contact-validation endpoint**. To
+> It relies on the `POST /{phone-number-id}/contacts` "contact check", which was a
+> feature of the legacy **WhatsApp On-Premises API** — not a Cloud API endpoint that
+> was later removed. Per [Meta's On-Premises API Sunset](https://developers.facebook.com/docs/whatsapp/on-premises/sunset),
+> the final On-Premises client version **expired on 2025-10-23**. The contact-check
+> never existed in the WhatsApp Cloud API (the API this server uses), and the Cloud
+> API has **no contact-validation equivalent**. (Even on On-Premises, Meta had
+> degraded it to always return `valid`, so the result could not be trusted.) To
 > determine whether a number can receive messages, **send the message and inspect
 > the message-status webhooks / error codes** (e.g. `131026` "message
 > undeliverable") instead. The tool is retained only for backwards compatibility.

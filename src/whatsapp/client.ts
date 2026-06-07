@@ -334,9 +334,11 @@ export class WhatsAppClient {
 
   /**
    * LEGACY / UNSUPPORTED. The POST /{phone-number-id}/contacts "contact check"
-   * endpoint was an On-Premises API feature (sunset 2025-10-23) with no Cloud
-   * API equivalent. Even before sunset Meta degraded it to always return
-   * "valid", so the result cannot be trusted. Retained for backwards
+   * was a feature of the legacy WhatsApp On-Premises API, whose final client
+   * version expired on 2025-10-23 (per Meta's On-Premises API Sunset). It was
+   * never part of the WhatsApp Cloud API used by this client and has no Cloud
+   * API equivalent. Even on On-Premises, Meta had degraded it to always return
+   * "valid", so the result could not be trusted. Retained for backwards
    * compatibility only — prefer sending the message and inspecting
    * message-status webhooks / error codes to determine deliverability.
    */
