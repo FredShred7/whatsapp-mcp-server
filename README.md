@@ -100,6 +100,22 @@ WhatsApp User → Meta Servers → POST /webhook → WhatsAppWebhook
 
 ## Quick Start
 
+### Option A — Run with npx (no clone required)
+
+The package ships a `whatsapp-mcp-server` binary, so the fastest way to use it is
+to let your MCP client launch it via `npx` and pass credentials through `env`
+(see the [client config blocks below](#usage-with-claude-desktop)):
+
+```bash
+npx -y whatsapp-mcp-server
+```
+
+`npx` downloads and runs the published package on demand — point your MCP client
+at it and you are done. Jump to [Usage with Claude Desktop](#usage-with-claude-desktop)
+or [Usage with Claude Code](#usage-with-claude-code).
+
+### Option B — Clone and build from source
+
 **Step 1 — Clone and install:**
 ```bash
 git clone https://github.com/FredShred7/whatsapp-mcp-server.git
@@ -134,6 +150,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 | `WHATSAPP_PHONE_NUMBER_ID` | Yes | Your WhatsApp phone number ID (from Meta App Dashboard > WhatsApp > API Setup) |
 | `WHATSAPP_ACCESS_TOKEN` | Yes | Permanent access token for your app (generate in Meta App Dashboard) |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Webhook | Random secret string — must match what you enter in Meta App Dashboard |
+| `WHATSAPP_APP_SECRET` | Recommended | Meta **App Secret** (App Dashboard > Settings > Basic). Used to verify the `X-Hub-Signature-256` signature on incoming webhooks. Strongly recommended in production. If unset, signature verification is skipped (with a startup warning) so local dev still works. |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID` | Optional | WhatsApp Business Account ID — required for listing phone numbers and templates |
 | `WHATSAPP_API_VERSION` | Optional | WhatsApp Cloud API version (default: `v21.0`) |
 | `WEBHOOK_PORT` | Optional | Port for incoming webhook server (default: off). Set to `3000` to enable |
@@ -169,7 +186,30 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 
 ## Usage with Claude Desktop
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows).
+
+**Recommended — run the published package via `npx`** (no local build needed):
+
+```json
+{
+  "mcpServers": {
+    "whatsapp": {
+      "command": "npx",
+      "args": ["-y", "whatsapp-mcp-server"],
+      "env": {
+        "WHATSAPP_PHONE_NUMBER_ID": "your_phone_number_id",
+        "WHATSAPP_ACCESS_TOKEN": "your_access_token",
+        "WHATSAPP_WEBHOOK_VERIFY_TOKEN": "your_verify_token",
+        "WHATSAPP_APP_SECRET": "your_app_secret",
+        "WHATSAPP_BUSINESS_ACCOUNT_ID": "your_business_account_id",
+        "WEBHOOK_PORT": "3000"
+      }
+    }
+  }
+}
+```
+
+**Alternatively — run a local build** (after cloning and `npm run build`):
 
 ```json
 {
@@ -181,6 +221,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
         "WHATSAPP_PHONE_NUMBER_ID": "your_phone_number_id",
         "WHATSAPP_ACCESS_TOKEN": "your_access_token",
         "WHATSAPP_WEBHOOK_VERIFY_TOKEN": "your_verify_token",
+        "WHATSAPP_APP_SECRET": "your_app_secret",
         "WHATSAPP_BUSINESS_ACCOUNT_ID": "your_business_account_id",
         "WEBHOOK_PORT": "3000"
       }
@@ -195,18 +236,19 @@ Restart Claude Desktop after saving. You should see the WhatsApp tools available
 
 ## Usage with Claude Code
 
-Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level `.claude/settings.json`):
+Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level `.claude/settings.json`). Using the published package via `npx`:
 
 ```json
 {
   "mcpServers": {
     "whatsapp": {
-      "command": "node",
-      "args": ["/absolute/path/to/whatsapp-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "whatsapp-mcp-server"],
       "env": {
         "WHATSAPP_PHONE_NUMBER_ID": "your_phone_number_id",
         "WHATSAPP_ACCESS_TOKEN": "your_access_token",
         "WHATSAPP_WEBHOOK_VERIFY_TOKEN": "your_verify_token",
+        "WHATSAPP_APP_SECRET": "your_app_secret",
         "WHATSAPP_BUSINESS_ACCOUNT_ID": "your_business_account_id",
         "WEBHOOK_PORT": "3000"
       }
@@ -217,7 +259,7 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json` or project-level
 
 Or use the CLI to add it:
 ```bash
-claude mcp add whatsapp node /absolute/path/to/whatsapp-mcp-server/dist/index.js
+claude mcp add whatsapp npx -y whatsapp-mcp-server
 ```
 
 ---
@@ -311,6 +353,12 @@ npm run build
 
 # Lint
 npm run lint
+
+# Run the test suite
+npm test
+
+# Re-run tests on change
+npm run test:watch
 ```
 
 ### Project structure
@@ -324,10 +372,13 @@ src/
 │   ├── types.ts          # TypeScript types and interfaces
 │   └── webhook.ts        # Express webhook server + in-memory store
 └── tools/
+    ├── shared.ts         # Shared helpers: formatError + Zod->JSON Schema
     ├── messages.ts       # Send/receive message tools
     ├── contacts.ts       # Contact and business profile tools
     ├── media.ts          # Media upload/download/delete tools
     └── templates.ts      # Template message tools
+
+test/                     # Vitest unit tests (schema, errors, webhook)
 ```
 
 ---
